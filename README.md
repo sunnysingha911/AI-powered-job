@@ -67,3 +67,45 @@ This project is built with a **real-world, product-first mindset**, focusing on 
 
 ## 🗂️ Project Structure
 
+root/
+├── frontend/ # Frontend (planned)
+├── backend/
+│ ├── src/
+│ │ ├── app.ts
+│ │ ├── server.ts
+│ │ ├── config/
+│ │ ├── modules/
+│ │ │ ├── auth
+│ │ │ ├── users
+│ │ │ ├── resumes
+│ │ │ ├── jobs
+│ │ │ ├── applications
+│ │ │ ├── analysis
+│ │ │ └── notifications
+│ │ ├── shared/
+│ │ └── infra/
+│ └── prisma/
+│ └── schema.prisma
+└── README.md
+
+
+
+---
+
+## 🛠️ Tech Stack
+
+### Backend
+- Node.js
+- Express.js
+- TypeScript
+- Prisma ORM
+- PostgreSQL
+- Swagger (OpenAPI)
+- Docker
+
+### AI
+- LLM-based resume and JD analysis
+- Skill extraction
+- ATS-focused insights
+
+---
