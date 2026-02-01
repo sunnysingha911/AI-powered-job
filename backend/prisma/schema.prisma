@@ -1,0 +1,200 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ====== ======================================
+// USER & AUTHENTICATION
+// ============================================
+
+model User {
+  id        String  @id @default(uuid())
+  email     String  @unique
+  password  String
+  firstName String?
+  lastName  String?
+  phone     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  resumes      Resume[]
+  applications Application[]
+
+  @@map("users")
+}
+
+// ============================================
+// RESUME MANAGEMENT
+// ============================================
+
+model Resume {
+  id       String @id @default(uuid())
+  userId   String
+  title    String
+  fileName String
+  fileUrl  String
+  fileSize Int
+
+  // Parsed content stored as JSONB
+  parsedContent Json?
+
+  // Extracted skills and metadata
+  skills     Json? // Array of skills extracted by AI
+  experience Json? // Work experience parsed
+  education  Json? // Education details parsed
+
+  // AI Analysis Results
+  atsScore Int? // ATS compatibility score (0-100)
+  analysis Json? // Detailed AI analysis results
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  applications Application[]
+
+  @@index([userId])
+  @@map("resumes")
+}
+
+// ============================================
+// JOB TRACKING
+// ============================================
+
+model Job {
+  id       String  @id @default(uuid())
+  title    String
+  company  String
+  location String?
+  jobType  JobType @default(FULL_TIME)
+
+  description  String? @db.Text
+  requirements Json? // Job requirements as array
+  salary       String?
+  jobUrl       String?
+
+  // Job metadata
+  postedDate DateTime?
+  source     String? // LinkedIn, Indeed, etc.
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  applications Application[]
+
+  @@index([company])
+  @@map("jobs")
+}
+
+enum JobType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  INTERNSHIP
+  FREELANCE
+}
+
+// ============================================
+// APPLICATION TRACKING
+// ============================================
+
+model Application {
+  id       String  @id @default(uuid())
+  userId   String
+  jobId    String
+  resumeId String?
+
+  status      ApplicationStatus @default(APPLIED)
+  appliedDate DateTime          @default(now())
+
+  // Application details
+  coverLetter String? @db.Text
+  notes       String? @db.Text
+
+  // AI-powered insights
+  matchScore Int? // Resume-Job match score (0-100)
+  insights   Json? // AI-generated insights
+
+  // Interview tracking
+  interviews Interview[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job    Job     @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  resume Resume? @relation(fields: [resumeId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, jobId]) // Prevent duplicate applications
+  @@index([userId])
+  @@index([status])
+  @@map("applications")
+}
+
+enum ApplicationStatus {
+  APPLIED
+  SCREENING
+  INTERVIEW
+  OFFER
+  REJECTED
+  ACCEPTED
+  WITHDRAWN
+}
+
+// ============================================
+// INTERVIEW TRACKING
+// ============================================
+
+model Interview {
+  id            String @id @default(uuid())
+  applicationId String
+
+  type        InterviewType
+  scheduledAt DateTime
+  duration    Int? // Duration in minutes
+  location    String? // Physical location or video link
+
+  interviewers Json? // Array of interviewer names/emails
+  notes        String? @db.Text
+  feedback     String? @db.Text
+
+  status InterviewStatus @default(SCHEDULED)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId])
+  @@index([scheduledAt])
+  @@map("interviews")
+}
+
+enum InterviewType {
+  PHONE_SCREEN
+  VIDEO
+  ONSITE
+  TECHNICAL
+  BEHAVIORAL
+  FINAL
+}
+
+enum InterviewStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+  RESCHEDULED
+}
